@@ -1,6 +1,6 @@
 from enum import Enum
 
-SCREEN_WIDTH = 560
+SCREEN_WIDTH = 616
 TILE_LENGTH = SCREEN_WIDTH / 28
 GAME_SPEED = 3
 
@@ -10,3 +10,18 @@ class Direction(Enum):
     DOWN = (0, 1)
     LEFT = (-1, 0)
     NULL = (0, 0)
+    
+    def get_opposite_direction(direction):
+        if direction == Direction.UP:
+            return Direction.DOWN
+        elif direction == Direction.DOWN:
+            return Direction.UP
+        elif direction == Direction.LEFT:
+            return Direction.RIGHT
+        elif direction == Direction.RIGHT:
+            return Direction.LEFT
+    
+class Mode(Enum):
+    CHASE = 0
+    SCATTER = 1
+    FRIGHTENED = 2

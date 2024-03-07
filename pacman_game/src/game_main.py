@@ -1,6 +1,7 @@
 import pygame
 
 from hero import Pacman
+from ghosts import Blinky, Pinky
 
 from global_variables import TILE_LENGTH
 from global_variables import SCREEN_WIDTH
@@ -42,6 +43,12 @@ pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, TILE_LENGTH * 31 + 50))
 
 ### LOAD ALL IMAGES ###
+blinky_img = pygame.image.load(r"pacman_game/resources/blinky.png").convert_alpha()
+blinky_img = pygame.transform.smoothscale(blinky_img, (TILE_LENGTH, TILE_LENGTH))
+
+pinky_img = pygame.image.load(r"pacman_game/resources/pinky.png").convert_alpha()
+pinky_img = pygame.transform.smoothscale(pinky_img, (TILE_LENGTH, TILE_LENGTH))
+
 pcm_imgs = {}
 directions = [Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT]
 directions_string = ["up", "down", "left", "right"]
@@ -65,7 +72,10 @@ text = font.render("Score: 0", True, "white")
 
 clock = pygame.time.Clock()
 running = True
+
 packman = Pacman(pcm_imgs, TILE_LENGTH * 13.5, TILE_LENGTH * 23)
+red_ghost = Blinky(blinky_img, TILE_LENGTH * 13, TILE_LENGTH * 12)
+pink_ghost = Pinky(pinky_img, TILE_LENGTH * 13, TILE_LENGTH * 12)
 
 while running:
     screen.fill("black")
@@ -76,6 +86,10 @@ while running:
             
     score = packman.move(game_map)
     screen.blit(packman.actual_image, packman.position)
+    red_ghost.move(game_map, packman.position, packman.direction)
+    screen.blit(red_ghost.image, red_ghost.position)
+    pink_ghost.move(game_map, packman.position, packman.direction)
+    screen.blit(pink_ghost.image, pink_ghost.position)
     text = font.render(f"Score: {score}", True, "white")
     screen.blit(text, (0, 31 * TILE_LENGTH))
 

@@ -8,7 +8,7 @@ from global_variables import GAME_SPEED
 from global_variables import Direction
 
 class Pacman():
-    def __init__(self, imgs,start_x, start_y):
+    def __init__(self, imgs, start_x, start_y):
         self.imgs = imgs
         self.actual_image = imgs[Direction.RIGHT][2]
         self.position = self.actual_image.get_rect()
@@ -37,7 +37,7 @@ class Pacman():
             
             if self._detect_tile(game_map, new_position) != "wall":
                 self.position = new_position.copy()
-            else: 
+            else:
                 new_position = self.position.copy()
             self._set_direction(game_map)
             
@@ -57,7 +57,7 @@ class Pacman():
             
         tile_type = game_map[tile_y][tile_x]
         
-        if tile_type == '0' or tile_type == '4':
+        if tile_type == '0': #or tile_type == '4':
             return "wall" 
         elif tile_type == '1':
             game_map[tile_y][tile_x] = '3'
