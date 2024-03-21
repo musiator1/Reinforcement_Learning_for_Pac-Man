@@ -1,6 +1,5 @@
 # Reinforcement_Learning_for_Pac-Man
 Implementing Pac-Man game and then using RL to complete the game.
 
-In current version you can controll hero using arrow keys.
-
-Ghosts movement is set to random at this moment. There is no interaction with pac-man yet.
+In menu you can switch between options using UP and DOWN arrows or tab and click enter to choose.
+In game you can move using arrows.
