@@ -68,6 +68,9 @@ class Pacman():
             return 'super_food'
         elif tile_type == '3':
             return 'empty'
+        elif tile_type == '5':
+            print(self.counter)
+            return 'special_crossing'
     
     def _set_direction(self, game_map):
         keys = pygame.key.get_pressed()
