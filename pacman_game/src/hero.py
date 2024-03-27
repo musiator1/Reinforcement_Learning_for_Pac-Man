@@ -57,7 +57,7 @@ class Pacman():
             
         tile_type = game_map[tile_y][tile_x]
         
-        if tile_type == '0': #or tile_type == '4':
+        if tile_type == '0' or tile_type == '4':
             return "wall" 
         elif tile_type == '1':
             game_map[tile_y][tile_x] = '3'
@@ -65,6 +65,7 @@ class Pacman():
             return 'food'
         elif tile_type == '2':
             game_map[tile_y][tile_x] = '3'
+            self.score += 10
             return 'super_food'
         elif tile_type == '3':
             return 'empty'

@@ -20,6 +20,8 @@ class Direction(Enum):
             return Direction.RIGHT
         elif direction == Direction.RIGHT:
             return Direction.LEFT
+        else:
+            return Direction.NULL
     
 class Mode(Enum):
     CHASE = 0

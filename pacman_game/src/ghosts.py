@@ -1,5 +1,6 @@
 import math 
 import random
+import pygame
 
 from abc import ABC
 from abc import abstractmethod
@@ -24,15 +25,25 @@ class Ghost(ABC):
         self.position = image.get_rect()
         self.position.move_ip(start_x, start_y)
         self.direction = Direction.NULL
-        self.mode = Mode.CHASE
+        self.mode = Mode.SCATTER
         self.scatter_mode_target_position = None
+        self.frightened_image = pygame.image.load(r"pacman_game/resources/frightened.png")
+        self.frightened_image = pygame.transform.smoothscale(self.frightened_image, (TILE_LENGTH, TILE_LENGTH))
+        self.frightened_counter = 0
+        self.normal_image = image
+        self.change_mode_values = [900, 3470, 4370, 6940, 7583, 10153, 10796]
     
-    def move(self, game_map, pacman_position, packman_direction, red_ghost_position= None):
+    def move(self, game_map, pacman_position, packman_direction, counter, red_ghost_position= None):
+        counter -= GAME_SPEED
         remained_movement = GAME_SPEED
         if self._is_in_tunnel():
             remained_movement *= 0.6
+        if self.mode == Mode.FRIGHTENED:
+            remained_movement *= 0.5  
         new_position = self.position.copy()
-        while remained_movement > 0:               
+        while remained_movement > 0:
+            counter += 1
+            self._set_mode(counter)          
             new_position.move_ip(self.direction.value)
 
             if new_position.x <= 0 and new_position.y == 14 * TILE_LENGTH:                
@@ -47,9 +58,42 @@ class Ghost(ABC):
                 new_position = self.position.copy()
                 
             if (self.position.x % TILE_LENGTH == 0 and self.position.y % TILE_LENGTH == 0) or self.direction == Direction.NULL:
-                self._set_direction(game_map, pacman_position, packman_direction, red_ghost_position)
-            
+                self._set_direction(game_map, pacman_position, packman_direction, red_ghost_position)     
             remained_movement -= 1
+            
+    def be_frightened(self, time):
+        if self.direction != Direction.NULL:
+            self.frightened_counter = time
+            self.direction = Direction.get_opposite_direction(self.direction)
+            self.image = self.frightened_image
+
+    def _set_mode(self, counter):
+        if self.frightened_counter > 0:
+            self.mode = Mode.FRIGHTENED
+            self.frightened_counter -= 1
+        else:
+            if self.image != self.normal_image:
+                self.image = self.normal_image
+            if counter in self.change_mode_values:
+                self.change_mode_values.remove(counter)
+                self.direction = Direction.get_opposite_direction(self.direction)
+            
+            if counter <= 900:
+                self.mode = Mode.SCATTER
+            elif 900 < counter <= 3470:
+                self.mode = Mode.CHASE
+            elif 3470 < counter <= 4370:
+                self.mode = Mode.SCATTER
+            elif 4370 < counter <= 6940:
+                self.mode = Mode.CHASE
+            elif 6940 < counter <= 7583:
+                self.mode = Mode.SCATTER
+            elif 7583 < counter <= 10153:
+                self.mode = Mode.CHASE
+            elif 10153 < counter <= 10796:
+                self.mode = Mode.SCATTER
+            else:
+                self.mode = Mode.CHASE
          
     def _set_direction(self, game_map, pacman_position, packman_direction, red_ghost_position):
         directions = [Direction.UP, Direction.LEFT, Direction.DOWN, Direction.RIGHT]
@@ -110,9 +154,9 @@ class Ghost(ABC):
             for txc in tunnel_x_coordinates:
                 if txc[0] < self.position.x < txc[1]:
                     return True
-        return False
+        return False 
         
-class Blinky(Ghost):
+class Red_Ghost(Ghost):
     def __init__(self, image, start_x, start_y):
         super().__init__(image, start_x, start_y)
         self.scatter_mode_target_position = [TILE_LENGTH * 28, TILE_LENGTH * -2]
@@ -120,7 +164,7 @@ class Blinky(Ghost):
     def _get_target_position(self, packman_position, packman_direction, red_ghost_position):
         return [packman_position.x, packman_position.y]
     
-class Pinky(Ghost):
+class Pink_Ghost(Ghost):
     def __init__(self, image, start_x, start_y):
         super().__init__(image, start_x, start_y)
         self.scatter_mode_target_position = [TILE_LENGTH * 2, TILE_LENGTH * -2]
@@ -133,7 +177,7 @@ class Pinky(Ghost):
             y = packman_position.y + packman_direction.value[1] * TILE_LENGTH * 4
             return [x, y]
         
-class Inky(Ghost):
+class Cyan_Ghost(Ghost):
     def __init__(self, image, start_x, start_y):
         super().__init__(image, start_x, start_y)
         self.scatter_mode_target_position = [TILE_LENGTH * 28, TILE_LENGTH * 33]
@@ -150,7 +194,7 @@ class Inky(Ghost):
         target_position = [tmp_position[0] + vector[0], tmp_position[1] + vector[1]]
         return target_position
     
-class Clyde(Ghost):
+class Orange_Ghost(Ghost):
     def __init__(self, image, start_x, start_y):
         super().__init__(image, start_x, start_y)
         self.scatter_mode_target_position = [TILE_LENGTH * 0, TILE_LENGTH * 33]

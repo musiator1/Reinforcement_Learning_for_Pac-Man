@@ -5,7 +5,6 @@ from global_variables import TILE_LENGTH
 from global_variables import SCREEN_WIDTH
 
 def show_option_menu(screen, path1, path2):
-    pygame.init()
     text_height = 50
     counter = 0
     screen_copy = screen.copy()
@@ -38,7 +37,7 @@ def show_option_menu(screen, path1, path2):
     while waiting:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                pygame.quit()
+                return False
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_DOWN or event.key == pygame.K_TAB:
                     counter += 1
@@ -56,14 +55,15 @@ def show_option_menu(screen, path1, path2):
                 if event.key == pygame.K_RETURN:
                     if counter % 2 == 0:
                         waiting = False
+                        return True
                     else:
-                        pygame.quit()
+                        return False
 
 def show_start_menu(screen):
-    show_option_menu(screen, r"pacman_game/resources/start_txt.png", r"pacman_game/resources/start_bttn.png")
+    return show_option_menu(screen, r"pacman_game/resources/start_txt.png", r"pacman_game/resources/start_bttn.png")
                                
 def show_end_screen(screen, game_won):
     if game_won == True:
-        show_option_menu(screen, r"pacman_game/resources/win.png", r"pacman_game/resources/restart_bttn.png")
+        return show_option_menu(screen, r"pacman_game/resources/win.png", r"pacman_game/resources/restart_bttn.png")
     else:
-        show_option_menu(screen, r"pacman_game/resources/lose.png", r"pacman_game/resources/restart_bttn.png")
+        return show_option_menu(screen, r"pacman_game/resources/lose.png", r"pacman_game/resources/restart_bttn.png")
