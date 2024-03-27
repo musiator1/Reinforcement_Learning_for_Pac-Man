@@ -52,8 +52,12 @@ def hero_ghost_collision():
         in_range_x = x - 5 < pacman.position.x < x + 5
         in_range_y = y - 5 < pacman.position.y < y + 5
         if in_range_x and in_range_y:
-            return True
-    return False
+            if ghost.mode != Mode.FRIGHTENED and ghost.mode != Mode.DEAD:
+                return 1 #ending game collision
+            elif ghost.mode == Mode.FRIGHTENED:
+                ghost.be_dead()
+                return 2 #eating the ghost
+    return 0 #no collision
 
 #init game
 pygame.init()
@@ -75,7 +79,7 @@ text = font.render("Score: 0", True, "white")
 
 #init hero and ghosts
 pacman = Pacman(pcm_imgs, TILE_LENGTH * 13.5, TILE_LENGTH * 23)
-red_ghost = Red_Ghost(red_ghost_img, TILE_LENGTH * 13, TILE_LENGTH * 12)
+red_ghost = Red_Ghost(red_ghost_img, TILE_LENGTH * 13, TILE_LENGTH * 11)
 pink_ghost = Pink_Ghost(pink_ghost_img, TILE_LENGTH * 13.5, TILE_LENGTH * 14)
 cyan_ghost = Cyan_Ghost(cyan_ghost_img, TILE_LENGTH * 11, TILE_LENGTH * 14)
 orange_ghost = Orange_Ghost(orange_ghost_img, TILE_LENGTH * 16, TILE_LENGTH * 14)
@@ -110,7 +114,8 @@ while running and continue_playing:
     score = pacman.move(game_map)
     if score - old_score == 10:
         for ghost in ghosts:
-            ghost.be_frightened(600)
+            if ghost.mode != Mode.DEAD:
+                ghost.be_frightened(600)
             
     red_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
     pink_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
@@ -124,12 +129,13 @@ while running and continue_playing:
     screen.blit(text, (0, 31 * TILE_LENGTH))
     
     #check collision with ghost
-    if hero_ghost_collision():
+    return_code = hero_ghost_collision()
+    if return_code == 1:
         if show_end_screen(screen, False) == False:
             break
         reset_game()
         game_map = load_map(r"pacman_game/resources/initial_map.txt")
-    
+       
     #check if hero won    
     if score == 278:
         if show_end_screen(screen, True) == False:
@@ -140,4 +146,3 @@ while running and continue_playing:
     pygame.display.flip()
     clock.tick(60)
 pygame.quit()
-

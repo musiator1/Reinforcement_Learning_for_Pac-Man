@@ -32,30 +32,43 @@ class Ghost(ABC):
         self.frightened_counter = 0
         self.normal_image = image
         self.change_mode_values = [900, 3470, 4370, 6940, 7583, 10153, 10796]
+        self.is_dead = False
     
     def move(self, game_map, pacman_position, packman_direction, counter, red_ghost_position= None):
+        #helping operation in changing direction while switching modes
         counter -= GAME_SPEED
+        
+        #setting speed
         remained_movement = GAME_SPEED
         if self._is_in_tunnel():
             remained_movement *= 0.6
         if self.mode == Mode.FRIGHTENED:
-            remained_movement *= 0.5  
+            remained_movement *= 0.5
+        if self.mode == Mode.DEAD:
+            remained_movement *= 2
+        
+        #moving loop
         new_position = self.position.copy()
         while remained_movement > 0:
             counter += 1
             self._set_mode(counter)          
             new_position.move_ip(self.direction.value)
 
+            #moving in portal
             if new_position.x <= 0 and new_position.y == 14 * TILE_LENGTH:                
                 new_position.x = 26.9 * TILE_LENGTH
-                
             if new_position.x >= 27 * TILE_LENGTH and new_position.y == 14 * TILE_LENGTH: 
                 new_position.x = 0
             
+            #rest of the movement
             if self._detect_tile(game_map, new_position) != "wall":
                 self.position = new_position.copy()
             else: 
                 new_position = self.position.copy()
+                
+            if self.position.x == TILE_LENGTH * 13.5 and self.position.y == TILE_LENGTH * 14:
+                self.is_dead = False
+                self.image = self.normal_image
                 
             if (self.position.x % TILE_LENGTH == 0 and self.position.y % TILE_LENGTH == 0) or self.direction == Direction.NULL:
                 self._set_direction(game_map, pacman_position, packman_direction, red_ghost_position)     
@@ -66,11 +79,21 @@ class Ghost(ABC):
             self.frightened_counter = time
             self.direction = Direction.get_opposite_direction(self.direction)
             self.image = self.frightened_image
+            
+    def be_dead(self):
+        self.mode = Mode.DEAD
+        dead_image = pygame.image.load(r"pacman_game/resources/eyes.png")
+        self.image = pygame.transform.smoothscale(dead_image, (TILE_LENGTH, TILE_LENGTH))
+        self.frightened_counter = 0
+        self.is_dead = True
+        pass
 
     def _set_mode(self, counter):
         if self.frightened_counter > 0:
             self.mode = Mode.FRIGHTENED
             self.frightened_counter -= 1
+        elif self.is_dead:
+            self.mode = Mode.DEAD
         else:
             if self.image != self.normal_image:
                 self.image = self.normal_image
@@ -104,6 +127,8 @@ class Ghost(ABC):
             target_position = self._get_target_position(pacman_position, packman_direction, red_ghost_position)
         elif self.mode == Mode.SCATTER:
             target_position = self.scatter_mode_target_position
+        elif self.mode == Mode.DEAD:
+            target_position = TILE_LENGTH * 13.5, TILE_LENGTH * 14
         elif self.mode == Mode.FRIGHTENED:
             while True:
                 random_direction = random.choice(directions)
@@ -125,7 +150,7 @@ class Ghost(ABC):
         new_position = self.position.move((direction.value[0] * TILE_LENGTH, direction.value[1] * TILE_LENGTH))
         if self._detect_tile(game_map, new_position) == "wall" or direction == Direction.get_opposite_direction(self.direction):
             return False
-        if self._detect_tile(game_map, new_position) == "line" and direction == Direction.DOWN:
+        if self._detect_tile(game_map, new_position) == "line" and direction == Direction.DOWN and self.mode != Mode.DEAD:
             return False
         return True
           
