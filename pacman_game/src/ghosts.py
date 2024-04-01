@@ -37,7 +37,7 @@ class Ghost(ABC):
     def move(self, game_map, pacman_position, packman_direction, counter, red_ghost_position= None):
         #helping operation in changing direction while switching modes
         counter -= GAME_SPEED
-        
+        ret_value = 0
         #setting speed
         remained_movement = GAME_SPEED
         if self._is_in_tunnel():
@@ -45,7 +45,7 @@ class Ghost(ABC):
         if self.mode == Mode.FRIGHTENED:
             remained_movement *= 0.5
         if self.mode == Mode.DEAD:
-            remained_movement *= 2
+            remained_movement *= 0.7
         
         #moving loop
         new_position = self.position.copy()
@@ -70,9 +70,20 @@ class Ghost(ABC):
                 self.is_dead = False
                 self.image = self.normal_image
                 
+            #checking collision with hero
+            in_range_x = self.position.x - 5 < pacman_position.x < self.position.x + 5
+            in_range_y = self.position.y - 5 < pacman_position.y < self.position.y + 5
+            if in_range_x and in_range_y:
+                if self.mode != Mode.FRIGHTENED and self.mode != Mode.DEAD:
+                    ret_value = 1 #ending game collision
+                elif self.mode == Mode.FRIGHTENED:
+                    self.be_dead()
+                
             if (self.position.x % TILE_LENGTH == 0 and self.position.y % TILE_LENGTH == 0) or self.direction == Direction.NULL:
                 self._set_direction(game_map, pacman_position, packman_direction, red_ghost_position)     
             remained_movement -= 1
+            
+        return ret_value
             
     def be_frightened(self, time):
         if self.direction != Direction.NULL:

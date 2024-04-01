@@ -45,20 +45,6 @@ def reset_game():
     orange_ghost.position.x = TILE_LENGTH * 16
     orange_ghost.position.y = TILE_LENGTH * 14    
 
-def hero_ghost_collision():
-    for ghost in ghosts:
-        y = ghost.position.y
-        x = ghost.position.x
-        in_range_x = x - 5 < pacman.position.x < x + 5
-        in_range_y = y - 5 < pacman.position.y < y + 5
-        if in_range_x and in_range_y:
-            if ghost.mode != Mode.FRIGHTENED and ghost.mode != Mode.DEAD:
-                return 1 #ending game collision
-            elif ghost.mode == Mode.FRIGHTENED:
-                ghost.be_dead()
-                return 2 #eating the ghost
-    return 0 #no collision
-
 #init game
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, TILE_LENGTH * 31 + 50))  
@@ -100,7 +86,23 @@ while running and continue_playing:
     if not any(ghost.mode == Mode.FRIGHTENED for ghost in ghosts):
         ghost_counter += GAME_SPEED
     
-    #draw actual state of the game
+    #actualize state of the game and get information about collision
+    old_score = score      
+    score = pacman.move(game_map)
+    if score - old_score == 10:
+        for ghost in ghosts:
+            if ghost.mode != Mode.DEAD:
+                ghost.be_frightened(600)
+    
+    collision_code = 0        
+    collision_code |= red_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
+    collision_code |= pink_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
+    if score >= 30:
+        collision_code |= cyan_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter, red_ghost.position)
+    if score >= 80:
+        collision_code |= orange_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
+    
+    #draw actual state of the game    
     screen.fill("black")
     draw_map(game_map, screen)
     screen.blit(pacman.actual_image, pacman.position)
@@ -109,35 +111,19 @@ while running and continue_playing:
     screen.blit(cyan_ghost.image, cyan_ghost.position)
     screen.blit(orange_ghost.image, orange_ghost.position)
     
-    #actualize state of the game
-    old_score = score      
-    score = pacman.move(game_map)
-    if score - old_score == 10:
-        for ghost in ghosts:
-            if ghost.mode != Mode.DEAD:
-                ghost.be_frightened(600)
-            
-    red_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
-    pink_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
-    if score >= 30:
-        cyan_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter, red_ghost.position)
-    if score >= 80:
-        orange_ghost.move(game_map, pacman.position, pacman.direction, ghost_counter)
-    
     #display actual score
     text = font.render(f"Score: {score}", True, "white")
     screen.blit(text, (0, 31 * TILE_LENGTH))
     
     #check collision with ghost
-    return_code = hero_ghost_collision()
-    if return_code == 1:
+    if collision_code == 1:
         if show_end_screen(screen, False) == False:
             break
         reset_game()
         game_map = load_map(r"pacman_game/resources/initial_map.txt")
        
     #check if hero won    
-    if score == 278:
+    if score == 280:
         if show_end_screen(screen, True) == False:
             break
         reset_game()
