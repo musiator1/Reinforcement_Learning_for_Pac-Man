@@ -4,28 +4,25 @@ import random
 import numpy as np
 from collections import deque
 from game import Pacman_Game_AI
-from global_variables import Direction
 from user_interfaces import show_start_menu
-from map import draw_map
-from model import Linear_QNet, QTrainer
+from model import network, QTrainer
+from plotter import plot
 
 MAX_MEMORY = 100_000
 BATCH_SIZE = 1000
 LR = 0.001
 
 class Agent:
-    
     def __init__(self):
         self.n_games = 0
-        self.epsilon = 0    #controll taking random actions
+        self.epsilon = 100    #controll taking random actions
         self.gamma = 0.9
         self.memory = deque(maxlen=MAX_MEMORY)
-        self.model = Linear_QNet(878 ,256, 4)
+        self.model = network(17, 4)
         self.trainer = QTrainer(self.model, lr = LR, gamma = self.gamma)
-        # TODO: model, trainer
 
     def get_state(self, game):
-        return game.state
+        return game.get_state()
     
     def remember(self, state, action, reward, next_state, game_over):
         self.memory.append((state, action, reward, next_state, game_over))
@@ -44,9 +41,13 @@ class Agent:
     
     def get_action(self, state):
         #random moves:
-        self.epsilon = 80 - self.n_games
+        if self.n_games < 90:
+            self.epsilon = 100 - self.n_games
+        else:
+            self.epsilon = 10
+        
         final_move = [0, 0, 0, 0]
-        if random.randint(0, 200) < self.epsilon:
+        if random.randint(0, 100) < self.epsilon:
             move = random.randint(0, 3)
             final_move[move] = 1
         else:
@@ -59,12 +60,13 @@ class Agent:
     
 def train():
     plot_scores = []
-    plot_mean_scores = []
+    plot_mean_scores = [0]
     total_score = 0
     record = 0
     agent = Agent()
     game = Pacman_Game_AI()
     game.reset_game()
+    rewards = 0
     
     #game loop
     running = show_start_menu(game.screen)
@@ -84,6 +86,8 @@ def train():
         reward, game_over, score = game.play_step(final_move)
         state_new = agent.get_state(game)
         
+        rewards += reward
+        
         #train short memory 
         agent.train_short_memory(state_old, final_move, reward, state_new, game_over)
         
@@ -96,13 +100,21 @@ def train():
             agent.n_games += 1
             agent.train_long_memory()
             
-            if score > record:
+            if score >= record:
                 record = score
                 agent.model.save()
                 
-            print("Game:", agent.n_games, "Score:", score, "Record:", record)  
+            print("Game:", agent.n_games, "Score:", score, "Record:", record, "Reward:", rewards)
+            rewards = 0
+            
+            plot_scores.append(score)
+            total_score += score
+            if agent.n_games % 20 == 0:
+                mean_score = total_score / 20
+                plot_mean_scores.append(mean_score)
+                total_score = 0
+            plot(plot_scores, plot_mean_scores)
             
         #game.clock.tick(60)
-
 
 train()

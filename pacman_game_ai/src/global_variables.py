@@ -1,4 +1,5 @@
 from enum import Enum
+import numpy as np
 
 SCREEN_WIDTH = 616
 TILE_LENGTH = SCREEN_WIDTH / 28
